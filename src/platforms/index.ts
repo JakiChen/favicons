@@ -6,6 +6,7 @@ import { AppleStartupPlatform } from "./appleStartup";
 import { FaviconsPlatform } from "./favicons";
 import { WindowsPlatform } from "./windows";
 import { YandexPlatform } from "./yandex";
+import { SafariPlatform } from "./safari";
 
 export type PlatformName =
   | "android"
@@ -13,7 +14,8 @@ export type PlatformName =
   | "appleStartup"
   | "favicons"
   | "windows"
-  | "yandex";
+  | "yandex"
+  | "safari";
 
 export function getPlatform(name: string, options: FaviconOptions): Platform {
   switch (name) {
@@ -29,6 +31,8 @@ export function getPlatform(name: string, options: FaviconOptions): Platform {
       return new WindowsPlatform(options);
     case "yandex":
       return new YandexPlatform(options);
+    case "safari":
+      return new SafariPlatform(options);
     default:
       throw new Error(`Unsupported platform ${name}`);
   }

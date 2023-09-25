@@ -102,6 +102,7 @@ export const defaultOptions: FaviconOptions = {
     favicons: true,
     windows: true,
     yandex: true,
+    safari: true,
   },
   output: {
     images: true,
