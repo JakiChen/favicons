@@ -1,5 +1,5 @@
 {
-  "name": "favicons",
+  "name": "@ailib/favicons",
   "version": "7.1.5",
   "description": "Favicon generator for Node.js",
   "type": "module",
