@@ -18,6 +18,7 @@ export interface IconPlaneOptions {
   readonly background?: string;
   readonly transparent: boolean;
   readonly rotate: boolean;
+  readonly darkMode: boolean;
 }
 
 function arrayComparator(a: unknown, b: unknown): number {
@@ -104,6 +105,7 @@ function flattenIconOptions(iconOptions: IconOptions): IconPlaneOptions[] {
     background: asString(iconOptions.background),
     transparent: iconOptions.transparent,
     rotate: iconOptions.rotate,
+    darkMode: iconOptions.darkMode,
   }));
 }
 
@@ -165,8 +167,8 @@ async function resize(
         background: "#00000000",
         kernel:
           pixelArt &&
-          width >= source.metadata.width &&
-          height >= source.metadata.height
+            width >= source.metadata.width &&
+            height >= source.metadata.height
             ? "nearest"
             : "lanczos3",
       })
@@ -231,8 +233,20 @@ function toRawImage(pipeline: sharp.Sharp): Promise<RawImage> {
     .toBuffer({ resolveWithObject: true });
 }
 
+function toDarkModeRawImage(pipeline: sharp.Sharp): Promise<RawImage> {
+  return pipeline
+    .toColorspace("srgb")
+    .raw({ depth: "uchar" })
+    .linear([255, 255, 255], [255, 255, 255])
+    .toBuffer({ resolveWithObject: true });
+}
+
 function toPng(pipeline: sharp.Sharp): Promise<Buffer> {
   return pipeline.png().toBuffer();
+}
+
+function toDarkModePng(pipeline: sharp.Sharp): Promise<Buffer> {
+  return pipeline.png().linear([255, 255, 255], [255, 255, 255]).toBuffer();
 }
 
 async function createSvg(
@@ -265,7 +279,9 @@ export async function createFavicon(
 
   if (ext === ".ico" || properties.length !== 1) {
     const images = await Promise.all(
-      properties.map((props) => createPlane(sourceset, props).then(toRawImage)),
+      properties.map((props) => createPlane(sourceset, props).then(
+        name.startsWith('favicon') && name.endsWith('-dark.ico') ? toDarkModeRawImage : toRawImage
+      )),
     );
     const contents = toIco(images);
     return { name, contents };
@@ -273,7 +289,9 @@ export async function createFavicon(
     const contents = await createSvg(sourceset, properties[0]);
     return { name, contents };
   } else {
-    const contents = await createPlane(sourceset, properties[0]).then(toPng);
+    const contents = await createPlane(sourceset, properties[0]).then(
+      name.startsWith('favicon') && name.endsWith('-dark.png') ? toDarkModePng : toPng
+    );
     return { name, contents };
   }
 }

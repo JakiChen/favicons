@@ -206,7 +206,8 @@ function flattenIconOptions(iconOptions) {
     pixelArt: iconOptions.pixelArt ?? false,
     background: asString(iconOptions.background),
     transparent: iconOptions.transparent,
-    rotate: iconOptions.rotate
+    rotate: iconOptions.rotate,
+    darkMode: iconOptions.darkMode
   }));
 }
 function relativeTo(base, path) {
@@ -289,8 +290,14 @@ async function createPlane(sourceset, options) {
 function toRawImage(pipeline) {
   return pipeline.toColorspace("srgb").raw({ depth: "uchar" }).toBuffer({ resolveWithObject: true });
 }
+function toDarkModeRawImage(pipeline) {
+  return pipeline.toColorspace("srgb").raw({ depth: "uchar" }).linear([255, 255, 255], [255, 255, 255]).toBuffer({ resolveWithObject: true });
+}
 function toPng(pipeline) {
   return pipeline.png().toBuffer();
+}
+function toDarkModePng(pipeline) {
+  return pipeline.png().linear([255, 255, 255], [255, 255, 255]).toBuffer();
 }
 async function createSvg(sourceset, options) {
   const { width, height } = options;
@@ -313,7 +320,9 @@ async function createFavicon(sourceset, name, iconOptions) {
   const ext = path.extname(name);
   if (ext === ".ico" || properties.length !== 1) {
     const images = await Promise.all(
-      properties.map((props) => createPlane(sourceset, props).then(toRawImage))
+      properties.map((props) => createPlane(sourceset, props).then(
+        name.startsWith("favicon") && name.endsWith("-dark.ico") ? toDarkModeRawImage : toRawImage
+      ))
     );
     const contents = toIco(images);
     return { name, contents };
@@ -321,7 +330,9 @@ async function createFavicon(sourceset, name, iconOptions) {
     const contents = await createSvg(sourceset, properties[0]);
     return { name, contents };
   } else {
-    const contents = await createPlane(sourceset, properties[0]).then(toPng);
+    const contents = await createPlane(sourceset, properties[0]).then(
+      name.startsWith("favicon") && name.endsWith("-dark.png") ? toDarkModePng : toPng
+    );
     return { name, contents };
   }
 }
@@ -332,7 +343,8 @@ function transparentIcon(width, height) {
     offset: 0,
     background: false,
     transparent: true,
-    rotate: false
+    rotate: false,
+    darkMode: false
   };
 }
 function transparentIcons(...sizes) {
@@ -341,7 +353,8 @@ function transparentIcons(...sizes) {
     offset: 0,
     background: false,
     transparent: true,
-    rotate: false
+    rotate: false,
+    darkMode: false
   };
 }
 function opaqueIcon(width, height) {
@@ -726,11 +739,16 @@ class AppleStartupPlatform extends Platform {
 
 const ICONS_OPTIONS$3 = [
   { name: "favicon.ico", ...transparentIcons(16, 24, 32, 48, 64) },
+  { name: "favicon-dark.ico", ...transparentIcons(16, 24, 32, 48, 64) },
   { name: "favicon-16x16.png", ...transparentIcon(16) },
+  { name: "favicon-16x16-dark.png", ...transparentIcon(16) },
   { name: "favicon-32x32.png", ...transparentIcon(32) },
+  { name: "favicon-32x32-dark.png", ...transparentIcon(32) },
   { name: "favicon-48x48.png", ...transparentIcon(48) },
-  { name: "favicon.svg", ...transparentIcon(1024), optional: true }
+  { name: "favicon-48x48-dark.png", ...transparentIcon(48) },
+  { name: "favicon.svg", ...transparentIcon(1024), optional: true },
   // arbitrary size. if more than one svg source is given, the closest to this size will be picked.
+  { name: "favicon-dark.svg", ...transparentIcon(1024), optional: true }
 ];
 class FaviconsPlatform extends Platform {
   constructor(options) {
@@ -741,13 +759,35 @@ class FaviconsPlatform extends Platform {
   }
   async createHtml() {
     return this.iconOptions.map(({ name, ...options }) => {
-      if (name.endsWith(".ico")) {
-        return `<link rel="icon" type="image/x-icon" href="${this.cacheBusting(this.relative(name))}">`;
-      } else if (name.endsWith(".svg")) {
-        return `<link rel="icon" type="image/svg+xml" href="${this.cacheBusting(this.relative(name))}">`;
+      if (options.darkMode) {
+        if (name.endsWith(".ico")) {
+          if (!name.endsWith("-dark.ico")) {
+            return `<link rel="icon" type="image/x-icon" href="${this.cacheBusting(this.relative(name))}" media="(prefers-color-scheme: light)">`;
+          } else {
+            return `<link rel="icon" type="image/x-icon" href="${this.cacheBusting(this.relative(name))}" media="(prefers-color-scheme: dark)">`;
+          }
+        } else if (name.endsWith(".svg")) {
+          if (!name.endsWith("-dark.svg")) {
+            return `<link rel="icon" type="image/svg+xml" href="${this.cacheBusting(this.relative(name))}" media="(prefers-color-scheme: light)">`;
+          } else {
+            return `<link rel="icon" type="image/svg+xml" href="${this.cacheBusting(this.relative(name))}" media="(prefers-color-scheme: dark)">`;
+          }
+        }
+        const { width, height } = options.sizes[0];
+        if (!name.endsWith("-dark.png")) {
+          return `<link rel="icon" type="image/png" sizes="${width}x${height}" href="${this.cacheBusting(this.relative(name))}" media="(prefers-color-scheme: light)">`;
+        } else {
+          return `<link rel="icon" type="image/png" sizes="${width}x${height}" href="${this.cacheBusting(this.relative(name))}" media="(prefers-color-scheme: dark)">`;
+        }
+      } else {
+        if (name.endsWith(".ico")) {
+          return `<link rel="icon" type="image/x-icon" href="${this.cacheBusting(this.relative(name))}">`;
+        } else if (name.endsWith(".svg")) {
+          return `<link rel="icon" type="image/svg+xml" href="${this.cacheBusting(this.relative(name))}">`;
+        }
+        const { width, height } = options.sizes[0];
+        return `<link rel="icon" type="image/png" sizes="${width}x${height}" href="${this.cacheBusting(this.relative(name))}">`;
       }
-      const { width, height } = options.sizes[0];
-      return `<link rel="icon" type="image/png" sizes="${width}x${height}" href="${this.cacheBusting(this.relative(name))}">`;
     });
   }
 }

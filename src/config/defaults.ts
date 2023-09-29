@@ -13,6 +13,7 @@ export interface IconOptions {
   readonly rotate: boolean;
   readonly purpose?: string;
   readonly pixelArt?: boolean;
+  readonly darkMode?: boolean;
 }
 
 export interface NamedIconOptions extends IconOptions {

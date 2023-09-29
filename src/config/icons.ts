@@ -7,6 +7,7 @@ export function transparentIcon(width: number, height?: number): IconOptions {
     background: false,
     transparent: true,
     rotate: false,
+    darkMode: false,
   };
 }
 
@@ -17,6 +18,7 @@ export function transparentIcons(...sizes: number[]): IconOptions {
     background: false,
     transparent: true,
     rotate: false,
+    darkMode: false,
   };
 }
 
