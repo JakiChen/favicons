@@ -16,8 +16,8 @@ const ICONS_OPTIONS: NamedIconOptions[] = [
   { name: "apple-touch-icon-167x167.png", ...opaqueIcon(167) },
   { name: "apple-touch-icon-180x180.png", ...opaqueIcon(180) },
   { name: "apple-touch-icon-1024x1024.png", ...opaqueIcon(1024) },
-  { name: "apple-touch-icon.png", ...opaqueIcon(180) },
   { name: "apple-touch-icon-precomposed.png", ...opaqueIcon(180) },
+  { name: "apple-touch-icon.png", ...opaqueIcon(180) },
 ];
 
 export class AppleIconPlatform extends Platform {
@@ -30,7 +30,7 @@ export class AppleIconPlatform extends Platform {
 
   override async createHtml(): Promise<FaviconHtmlElement[]> {
     const icons = this.iconOptions
-      .filter(({ name }) => /\d/.test(name)) // with a size in a name
+      // .filter(({ name }) => /\d/.test(name)) // with a size in a name
       .map((options) => {
         const { width, height } = options.sizes[0];
 
