@@ -104,7 +104,6 @@ function flattenIconOptions(iconOptions: IconOptions): IconPlaneOptions[] {
     background: asString(iconOptions.background),
     transparent: iconOptions.transparent,
     rotate: iconOptions.rotate,
-    darkMode: iconOptions.darkMode,
   }));
 }
 
