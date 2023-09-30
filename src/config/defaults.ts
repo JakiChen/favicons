@@ -13,7 +13,6 @@ export interface IconOptions {
   readonly rotate: boolean;
   readonly purpose?: string;
   readonly pixelArt?: boolean;
-  readonly darkMode?: boolean;
 }
 
 export interface NamedIconOptions extends IconOptions {
@@ -72,6 +71,7 @@ export interface FaviconOptions {
   readonly files?: Record<PlatformName, FileOptions>;
   readonly shortcuts?: ShortcutOptions[];
   readonly output?: OutputOptions;
+  readonly faviconsDarkMode?: boolean;
 }
 
 export const defaultOptions: FaviconOptions = {

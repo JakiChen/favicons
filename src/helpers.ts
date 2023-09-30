@@ -18,7 +18,6 @@ export interface IconPlaneOptions {
   readonly background?: string;
   readonly transparent: boolean;
   readonly rotate: boolean;
-  readonly darkMode: boolean;
 }
 
 function arrayComparator(a: unknown, b: unknown): number {
