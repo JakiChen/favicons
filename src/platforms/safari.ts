@@ -4,7 +4,7 @@ import { FaviconHtmlElement } from "../index";
 import { Platform, uniformIconOptions } from "./base";
 
 const ICONS_OPTIONS: NamedIconOptions[] = [
-  { name: "safari-pinned-tab.svg", ...opaqueIcon(1024) },
+  { name: "safari-pinned-tab.svg", ...opaqueIcon(16) },
 ];
 
 export class SafariPlatform extends Platform {
@@ -17,7 +17,9 @@ export class SafariPlatform extends Platform {
 
   override async createHtml(): Promise<FaviconHtmlElement[]> {
     return this.iconOptions.map(({ name, ...options }) => {
-      return `<link rel="mask-icon" href="${this.cacheBusting(this.relative(name))}" color="${this.options.theme_color}">`
+      if(name.endsWith('.svg')){
+        return `<link rel="mask-icon" href="${this.cacheBusting(this.relative(name))}" color="${this.options.theme_color}">`
+      }
     });
   }
 }
