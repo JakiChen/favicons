@@ -1,4 +1,11 @@
 import { PlatformName } from "../platforms";
+import {
+  DevicePlatformIdentifiers,
+  DistributionPlatformIdentifiers,
+  AppCategory,
+  Display,
+  Platforms,
+} from "../types";
 
 export interface IconSize {
   readonly width: number;
@@ -31,10 +38,25 @@ export interface ShortcutOptions {
   readonly icon?: string | Buffer | (string | Buffer)[];
 }
 
+export interface ScreenshotsOptions {
+  readonly form_factor?: "narrow" | "wide";
+  readonly label?: string;
+  readonly platform?:
+    | DevicePlatformIdentifiers
+    | DistributionPlatformIdentifiers;
+  readonly image?: string | Buffer | (string | Buffer)[];
+  readonly format?: "png" | "webp";
+}
+
 export interface Application {
-  readonly platform?: string;
+  readonly platform?: Platforms;
   readonly url?: string;
   readonly id?: string;
+  readonly min_version?: string;
+  readonly fingerprints?: Array<{
+    readonly type: "sha256_cert" | (string & NonNullable<unknown>);
+    readonly value: string;
+  }>;
 }
 
 export interface OutputOptions {
@@ -47,6 +69,7 @@ export interface FaviconOptions {
   readonly path?: string;
   readonly appName?: string;
   readonly appShortName?: string;
+  readonly appCategories?: AppCategory[] | string[];
   readonly appDescription?: string;
   readonly developerName?: string;
   readonly developerURL?: string;
@@ -56,7 +79,12 @@ export interface FaviconOptions {
   readonly background?: string;
   readonly theme_color?: string;
   readonly appleStatusBarStyle?: string;
-  readonly display?: string;
+  readonly display?: Display;
+  readonly display_override?: (
+    | Display
+    | "tabbed"
+    | "window-controls-overlay"
+  )[];
   readonly orientation?: string;
   readonly scope?: string;
   readonly start_url?: string;
@@ -70,6 +98,7 @@ export interface FaviconOptions {
   readonly icons?: Record<PlatformName, IconOptions | boolean | string[]>;
   readonly files?: Record<PlatformName, FileOptions>;
   readonly shortcuts?: ShortcutOptions[];
+  readonly screenshots?: ScreenshotsOptions[];
   readonly output?: OutputOptions;
   readonly faviconsDarkMode?: boolean;
 }
@@ -103,7 +132,6 @@ export const defaultOptions: FaviconOptions = {
     favicons: true,
     windows: true,
     yandex: true,
-    safari: true,
   },
   output: {
     images: true,
