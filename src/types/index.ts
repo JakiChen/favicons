@@ -92,3 +92,7 @@ export type Platforms =
   | "tizen"
   | "webapp"
   | (string & NonNullable<unknown>);
+
+export { FileHandler } from "./FileHandler";
+export { ShareTarget } from "./ShareTarget";
+export { ProtocolHandler } from "./ProtocolHandler";
