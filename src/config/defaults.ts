@@ -5,6 +5,9 @@ import {
   AppCategory,
   Display,
   Platforms,
+  FileHandler,
+  ShareTarget,
+  ProtocolHandler,
 } from "../types";
 
 export interface IconSize {
@@ -85,8 +88,10 @@ export interface FaviconOptions {
     | "tabbed"
     | "window-controls-overlay"
   )[];
+  readonly file_handlers?: FileHandler[];
   readonly orientation?: string;
   readonly scope?: string;
+  readonly id?: string;
   readonly start_url?: string;
   readonly version?: string;
   readonly pixel_art?: boolean;
@@ -94,9 +99,11 @@ export interface FaviconOptions {
   readonly manifestRelativePaths?: boolean;
   readonly manifestMaskable?: boolean | string | Buffer | (string | Buffer)[];
   readonly preferRelatedApplications?: boolean;
+  readonly protocol_handlers?: ProtocolHandler[];
   readonly relatedApplications?: Application[];
   readonly icons?: Record<PlatformName, IconOptions | boolean | string[]>;
   readonly files?: Record<PlatformName, FileOptions>;
+  readonly share_target?: ShareTarget;
   readonly shortcuts?: ShortcutOptions[];
   readonly screenshots?: ScreenshotsOptions[];
   readonly output?: OutputOptions;
