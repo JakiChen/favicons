@@ -18,6 +18,7 @@ const ICONS_OPTIONS: NamedIconOptions[] = [
   { name: "apple-touch-icon-1024x1024.png", ...opaqueIcon(1024) },
   { name: "apple-touch-icon-precomposed.png", ...opaqueIcon(180) },
   { name: "apple-touch-icon.png", ...opaqueIcon(180) },
+  { name: "safari-pinned-tab.svg", ...opaqueIcon(16) },
 ];
 
 export class AppleIconPlatform extends Platform {
@@ -33,6 +34,12 @@ export class AppleIconPlatform extends Platform {
       // .filter(({ name }) => /\d/.test(name)) // with a size in a name
       .map((options) => {
         const { width, height } = options.sizes[0];
+        const { name } = options;
+
+        // prettier-ignore
+        if (name.endsWith(".svg")) {
+          return `<link rel="mask-icon" href="${this.cacheBusting(this.relative(name))}" color="${this.options.theme_color}">`;
+        }
 
         // prettier-ignore
         return `<link rel="apple-touch-icon" sizes="${width}x${height}" href="${this.cacheBusting(this.relative(options.name))}">`;
