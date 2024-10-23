@@ -11,8 +11,14 @@ import {
   relativeTo,
   SourceImage,
   sourceImages,
+  createScreenshot,
 } from "../helpers";
 import { Platform, uniformIconOptions } from "./base";
+
+import {
+  DevicePlatformIdentifiers,
+  DistributionPlatformIdentifiers,
+} from "../types";
 
 interface Icon {
   readonly src: string;
@@ -26,6 +32,15 @@ interface Shortcut {
   readonly description?: string;
   readonly url: string;
   readonly icons?: Icon[];
+}
+
+export interface Screenshot {
+  src: string;
+  sizes: string;
+  type: string;
+  form_factor?: "narrow" | "wide";
+  label?: string;
+  platform?: DevicePlatformIdentifiers | DistributionPlatformIdentifiers;
 }
 
 const ICONS_OPTIONS: NamedIconOptions[] = [
@@ -129,11 +144,16 @@ export class AndroidPlatform extends Platform {
       icons = [...icons, ...(await this.shortcutIcons())];
     }
 
+    // Convert screenshots
+    if (this.options.screenshots) {
+      icons = [...icons, ...(await this.screenshots())];
+    }
+
     return icons;
   }
 
   override async createFiles(): Promise<FaviconFile[]> {
-    return [this.manifest()];
+    return [await this.manifest()];
   }
 
   override async createHtml(): Promise<FaviconHtmlElement[]> {
@@ -169,25 +189,53 @@ export class AndroidPlatform extends Platform {
     return icons.flat();
   }
 
+  private async screenshots(): Promise<FaviconImage[]> {
+    const screenshots = await Promise.all(
+      this.options.screenshots.map(async (screenshot, index) => {
+        if (!screenshot.image) return null;
+        const screenshotSourceset = await sourceImages(screenshot.image);
+        const { width, height } = screenshotSourceset[0].metadata;
+        const { platform, format } = screenshot;
+        const Format = format || "webp";
+        const prefix = platform ? `${platform}-` : "";
+
+        const screenshotImages = await createScreenshot(
+          screenshotSourceset,
+          // prettier-ignore
+          `${prefix}screenshots${index + 1}-${width}x${height}.${Format}`,
+          Format,
+        );
+        return screenshotImages;
+      }),
+    );
+    return screenshots.flat().filter((screenshot) => screenshot !== null);
+  }
+
   private manifestFileName(): string {
     return (
       this.options.files?.android?.manifestFileName ?? "manifest.webmanifest"
     );
   }
 
-  private manifest(): FaviconFile {
+  private async manifest(): Promise<FaviconFile> {
     const { options } = this;
     const basePath = options.manifestRelativePaths ? null : options.path;
 
     const properties: Record<string, unknown> = {
       name: options.appName,
       short_name: options.appShortName || options.appName,
+      categories: options.appCategories,
       description: options.appDescription,
       dir: options.dir,
       lang: options.lang,
       display: options.display,
+      display_override: options.display_override,
+      file_handlers: options.file_handlers,
       orientation: options.orientation,
+      protocol_handlers: options.protocol_handlers,
       scope: options.scope,
+      id: options.id,
+      share_target: options.share_target,
       start_url: options.start_url,
       background_color: options.background,
       theme_color: options.theme_color,
@@ -219,7 +267,7 @@ export class AndroidPlatform extends Platform {
     }
 
     const defaultPurpose =
-      options.manifestMaskable === true ? "any maskable" : "any";
+      options.manifestMaskable === true ? "maskable" : "any";
 
     properties.icons = icons.map((iconOptions) => {
       const { width, height } = iconOptions.sizes[0];
@@ -228,12 +276,18 @@ export class AndroidPlatform extends Platform {
         src: this.cacheBusting(relativeTo(basePath, iconOptions.name)),
         sizes: `${width}x${height}`,
         type: "image/png",
-        purpose: iconOptions.purpose ?? defaultPurpose,
+        purpose:
+          iconOptions.purpose ?? (width === 512 ? "any" : defaultPurpose), // 自动添加 any 以排除至少需要一个 any 的警告
       };
     });
 
     if (Array.isArray(options.shortcuts) && options.shortcuts.length > 0) {
       properties.shortcuts = this.manifestShortcuts(basePath);
+    }
+
+    // 添加 screenshots 属性
+    if (Array.isArray(options.screenshots) && options.screenshots.length > 0) {
+      properties.screenshots = await this.manifestScreenshots(basePath);
     }
 
     return {
@@ -271,5 +325,50 @@ export class AndroidPlatform extends Platform {
         };
       })
       .filter((x) => x !== null);
+  }
+
+  private async manifestScreenshots(basePath: string): Promise<Screenshot[]> {
+    const screenshots = await Promise.all(
+      this.options.screenshots.map(async (screenshot, index) => {
+        const { form_factor, label, platform, image, format } = screenshot;
+
+        try {
+          // 获取图片的宽高
+          const screenshotSourceset = await sourceImages(image);
+          if (screenshotSourceset.length === 0) {
+            throw new Error("No valid source images found");
+          }
+          const { width, height } = screenshotSourceset[0].metadata;
+
+          // 根据 width 动态生成 form_factor，如果没有指定则自动推断
+          const calculatedFormFactor =
+            form_factor || (width < 720 ? "narrow" : "wide");
+
+          const prefix = platform ? `${platform}-` : "";
+
+          const screenshotImageSrc = this.cacheBusting(
+            relativeTo(
+              basePath,
+              // prettier-ignore
+              `${prefix}screenshots${index + 1}-${width}x${height}.${format || "webp"}`,
+            ),
+          );
+
+          return {
+            src: screenshotImageSrc,
+            sizes: `${width}x${height}`,
+            type: `image/${format || "webp"}`,
+            form_factor: calculatedFormFactor,
+            label,
+            platform,
+          };
+        } catch (error) {
+          console.error(`Error processing screenshot ${index + 1}:`, error);
+          return null;
+        }
+      }),
+    );
+
+    return screenshots.filter((screenshot) => screenshot !== null);
   }
 }
