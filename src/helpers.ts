@@ -165,8 +165,8 @@ async function resize(
         background: "#00000000",
         kernel:
           pixelArt &&
-            width >= source.metadata.width &&
-            height >= source.metadata.height
+          width >= source.metadata.width &&
+          height >= source.metadata.height
             ? "nearest"
             : "lanczos3",
       })
@@ -277,9 +277,13 @@ export async function createFavicon(
 
   if (ext === ".ico" || properties.length !== 1) {
     const images = await Promise.all(
-      properties.map((props) => createPlane(sourceset, props).then(
-        name.startsWith('favicon') && name.endsWith('-dark.ico') ? toDarkModeRawImage : toRawImage
-      )),
+      properties.map((props) =>
+        createPlane(sourceset, props).then(
+          name.startsWith("favicon") && name.endsWith("-dark.ico")
+            ? toDarkModeRawImage
+            : toRawImage,
+        ),
+      ),
     );
     const contents = toIco(images);
     return { name, contents };
@@ -288,8 +292,25 @@ export async function createFavicon(
     return { name, contents };
   } else {
     const contents = await createPlane(sourceset, properties[0]).then(
-      name.startsWith('favicon') && name.endsWith('-dark.png') ? toDarkModePng : toPng
+      name.startsWith("favicon") && name.endsWith("-dark.png")
+        ? toDarkModePng
+        : toPng,
     );
     return { name, contents };
   }
+}
+
+export async function createScreenshot(
+  sourceset: SourceImage[],
+  name: string,
+  format: "png" | "webp" | "jpeg",
+): Promise<FaviconImage> {
+  const { width, height } = sourceset[0].metadata;
+
+  const contents = await sharp(sourceset[0].data)
+    .resize(width, height)
+    .toFormat(format)
+    .toBuffer();
+
+  return { name, contents };
 }
