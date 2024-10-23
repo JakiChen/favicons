@@ -1,6 +1,6 @@
 import { FaviconHtmlElement } from "../index";
-import { FaviconOptions, IconOptions, NamedIconOptions } from "../config/defaults";
-import { transparentIcon, transparentIcons, opaqueIcon } from "../config/icons";
+import { FaviconOptions, NamedIconOptions } from "../config/defaults";
+import { transparentIcon, transparentIcons } from "../config/icons";
 import { OptionalMixin, Platform, uniformIconOptions } from "./base";
 
 const ICONS_OPTIONS: (NamedIconOptions & OptionalMixin)[] = [
@@ -8,7 +8,7 @@ const ICONS_OPTIONS: (NamedIconOptions & OptionalMixin)[] = [
   { name: "favicon-16x16.png", ...transparentIcon(16) },
   { name: "favicon-32x32.png", ...transparentIcon(32) },
   { name: "favicon-48x48.png", ...transparentIcon(48) },
-  { name: "favicon.svg", ...transparentIcon(1024)}, // arbitrary size. if more than one svg source is given, the closest to this size will be picked.
+  { name: "favicon.svg", ...transparentIcon(1024) }, // arbitrary size. if more than one svg source is given, the closest to this size will be picked.
 ];
 
 const ICONS_OPTIONS_DARKMODE: (NamedIconOptions & OptionalMixin)[] = [
@@ -26,7 +26,7 @@ export class FaviconsPlatform extends Platform {
       uniformIconOptions(
         options,
         options.icons.favicons,
-        options.faviconsDarkMode ? ICONS_OPTIONS_DARKMODE : ICONS_OPTIONS
+        options.faviconsDarkMode ? ICONS_OPTIONS_DARKMODE : ICONS_OPTIONS,
       ),
     );
   }
@@ -35,10 +35,12 @@ export class FaviconsPlatform extends Platform {
     if (this.options.faviconsDarkMode) {
       return this.iconOptions.map(({ name, ...options }) => {
         if (name.endsWith(".ico")) {
-          if(!name.endsWith("-dark.ico")){
-            return `<link rel="icon" type="image/x-icon" href="${this.cacheBusting(this.relative(name))}" media="(prefers-color-scheme: light)">`;
-          } else {
+          if (name.endsWith("-dark.ico")) {
+            // prettier-ignore
             return `<link rel="icon" type="image/x-icon" href="${this.cacheBusting(this.relative(name))}" media="(prefers-color-scheme: dark)">`;
+          } else {
+            // prettier-ignore
+            return `<link rel="icon" type="image/x-icon" href="${this.cacheBusting(this.relative(name))}" media="(prefers-color-scheme: light)">`;
           }
         } else if (name.endsWith(".svg")) {
           // prettier-ignore
@@ -47,29 +49,29 @@ export class FaviconsPlatform extends Platform {
 
         const { width, height } = options.sizes[0];
 
-        // prettier-ignore
-        if(!name.endsWith("-dark.png")){
-          return `<link rel="icon" type="image/png" sizes="${width}x${height}" href="${this.cacheBusting(this.relative(name))}"  media="(prefers-color-scheme: light)">`;
+        if (name.endsWith("-dark.png")) {
+          // prettier-ignore
+          return `<link rel="icon" type="image/png" sizes="${width}x${height}" href="${this.cacheBusting(this.relative(name))}" media="(prefers-color-scheme: dark)">`;
         } else {
-          return `<link rel="icon" type="image/png" sizes="${width}x${height}" href="${this.cacheBusting(this.relative(name))}"  media="(prefers-color-scheme: dark)">`;
-        }
-      });
-
-    } else {
-      return this.iconOptions.map(({ name, ...options }) => {
-        if (name.endsWith(".ico")) {
           // prettier-ignore
-          return `<link rel="icon" type="image/x-icon" href="${this.cacheBusting(this.relative(name))}">`;
-        } else if (name.endsWith(".svg")) {
-          // prettier-ignore
-          return `<link rel="icon" type="image/svg+xml" href="${this.cacheBusting(this.relative(name))}">`;
+          return `<link rel="icon" type="image/png" sizes="${width}x${height}" href="${this.cacheBusting(this.relative(name))}" media="(prefers-color-scheme: light)">`;
         }
-
-        const { width, height } = options.sizes[0];
-
-        // prettier-ignore
-        return `<link rel="icon" type="image/png" sizes="${width}x${height}" href="${this.cacheBusting(this.relative(name))}">`;
       });
     }
+
+    return this.iconOptions.map(({ name, ...options }) => {
+      if (name.endsWith(".ico")) {
+        // prettier-ignore
+        return `<link rel="icon" type="image/x-icon" href="${this.cacheBusting(this.relative(name))}">`;
+      } else if (name.endsWith(".svg")) {
+        // prettier-ignore
+        return `<link rel="icon" type="image/svg+xml" href="${this.cacheBusting(this.relative(name))}">`;
+      }
+
+      const { width, height } = options.sizes[0];
+
+      // prettier-ignore
+      return `<link rel="icon" type="image/png" sizes="${width}x${height}" href="${this.cacheBusting(this.relative(name))}">`;
+    });
   }
 }
