@@ -1,6 +1,6 @@
 # Favicons
 
-[![NPM version](https://img.shields.io/npm/v/favicons.svg)](https://www.npmjs.org/package/favicons)
+[![NPM version](https://img.shields.io/npm/v/favicons-lib.svg)](https://www.npmjs.org/package/favicons-lib)
 [![Build Status](https://github.com/itgalaxy/favicons/actions/workflows/ci.yml/badge.svg)](https://github.com/itgalaxy/favicons/actions/workflows/ci.yml)
 
 A **Node.js module** for generating favicons and their associated files. Originally built for [Google's Web Starter Kit](https://github.com/google/web-starter-kit) and [Catalyst](https://github.com/haydenbleasel/catalyst). Installed through NPM with:
