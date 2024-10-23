@@ -72,6 +72,14 @@ const configuration = {
     },
     // more shortcuts objects
   ],
+  screenshots:[
+    {
+      platform: "",
+      label: ""
+      image: "src/pwa/screenshot.png", // screenshot
+      format: "webp"
+    }
+  ]
 };
 
 try {
